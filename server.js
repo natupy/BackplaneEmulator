@@ -68,7 +68,7 @@ wssHtml.on('connection', (wsHtml) => {
       techButton = data.techButton;
       spinButton = data.spinButton;
 
-      console.log('Estado actualizado desde el cliente:', data);
+//      console.log('Estado actualizado desde el cliente:', data);
     } catch (error) {
       console.error('Error al parsear mensaje:', error);
     }
@@ -101,11 +101,12 @@ wssBackplane.on('connection', (ws) => {
 
 // Función para analizar los datos recibidos
 function onData() {
-  console.log('Datos recibidos:', bufferRx.slice(0, cantRx).toString());
-  
+  // console.log('Datos recibidos:', bufferRx.slice(0, cantRx).toString());
+  cantRx = 0; // Reiniciar contador de bytes recibidos
+
   // Actualizar el estado de collectLamp y spinLamp según los datos recibidos
   const cmd = String.fromCharCode(bufferRx[4])
-  console.log (cmd)
+  // console.log (cmd)
   switch (cmd){
     case 'L':
       const lampCode = String.fromCharCode(bufferRx[5]);
@@ -118,7 +119,6 @@ function onData() {
   }
 
   sendStatus();
-  cantRx = 0; // Reiniciar contador de bytes recibidos
 }
 
 // Función para enviar el estado
@@ -127,13 +127,14 @@ function sendStatus() {
   // Enviar el buffer a través del socket o interfaz correspondiente
   const statusBuffer = Buffer.from([
     0x31, 0x30, 0x53,
-    mainDoorStatus ? 0x31 : 0x30,
-    billDoorStatus ? 0x31 : 0x30,
-    logicDoorStatus ? 0x31 : 0x30,
-    techButton ? 0x31 : 0x30,
-    collectButton ? 0x31 : 0x30,
     spinButton ? 0x31 : 0x30,
-    0x31, 0x30
+    techButton ? 0x31 : 0x30,
+    logicDoorStatus ? 0x31 : 0x30,
+    collectButton ? 0x31 : 0x30,
+    0x30,
+    billDoorStatus ? 0x31 : 0x30,
+    mainDoorStatus ? 0x31 : 0x30,
+    0x31, 0x30 
   ]);
   // Enviar el buffer a través del PTY
   if (wsBackplane)

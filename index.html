@@ -47,7 +47,7 @@
   </div>
 
   <script>
-    const socket = new WebSocket(`ws://${window.location.hostname}:3111`);
+    const socket = new WebSocket(`ws://${window.location.hostname}:3112`);
 
     let mainDoorStatus = false;
     let billDoorStatus = false;
@@ -73,16 +73,26 @@
     socket.onmessage = function(event) {
       const data = JSON.parse(event.data);
       console.log (data);
-      document.getElementById('mainDoorStatus').innerText = data.mainDoorStatus ? "Closed" : "Open";
-      document.getElementById('billDoorStatus').innerText = data.billDoorStatus ? "Closed" : "Open";
-      document.getElementById('logicDoorStatus').innerText = data.logicDoorStatus ? "Closed" : "Open";
+      if (typeof (data.mainDoorStatus) ==='boolean'){
+        document.getElementById('mainDoorStatus').innerText = data.mainDoorStatus ? "Closed" : "Open";
+        mainDoorStatus = data.mainDoorStatus;
+      }
+      if (typeof (data.billDoorStatus) ==='boolean'){
+        billDoorStatus = data.billDoorStatus;
+        document.getElementById('billDoorStatus').innerText = data.billDoorStatus ? "Closed" : "Open";
+      }
+      if (typeof (data.logicDoorStatus) ==='boolean'){
+        logicDoorStatus = data.logicDoorStatus;
+        document.getElementById('logicDoorStatus').innerText = data.logicDoorStatus ? "Closed" : "Open";
+      }
       // Asegúrate de actualizar las variables locales
-      mainDoorStatus = data.mainDoorStatus;
-      billDoorStatus = data.billDoorStatus;
-      logicDoorStatus = data.logicDoorStatus;
-      collectButton = data.collectButton;
-      techButton = data.techButton;
-      spinButton = data.spinButton;
+      if (typeof (data.collectButton) ==='boolean')
+        collectButton = data.collectButton;
+      if (typeof (data.techButton) ==='boolean')
+        techButton = data.techButton;
+      if (typeof (data.spinButton) ==='boolean')
+        spinButton = data.spinButton;
+
       if (typeof (data.collectLamp) ==='boolean')
         document.getElementById('collectLamp').style.backgroundColor = data.collectLamp ? "lightgreen" : "darkgreen";
       if (typeof (data.spinLamp) ==='boolean')

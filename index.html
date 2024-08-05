@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backplane Board</title>
+  <style>
+    .lamp {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Backplane Board</h1>
+  <div id="status">
+    <p>
+      <button id="toggleMainDoorStatus">Toggle Main Door</button>
+      Main Door Status: <span id="mainDoorStatus">Open</span>
+    </p>
+
+    <p>
+      <button id="toggleBillDoorStatus">Toggle Bill Door</button>
+      Bill Door Status: <span id="billDoorStatus">Open</span>
+    </p>
+
+    <p>
+      <button id="toggleLogicDoorStatus">Toggle Logic Door</button>
+      Logic Door Status: <span id="logicDoorStatus">Open</span>
+    </p>
+
+    <p>
+      Collect Lamp: <span id="collectLamp" class="lamp" style="background-color: darkgreen;"></span>
+      <button id="pressCollectButton">Press Collect Button</button>
+    </p>
+
+    <p>
+      Spin Lamp: <span id="spinLamp" class="lamp" style="background-color: darkgreen;"></span>
+      <button id="pressSpinButton">Press Spin Button</button>
+    </p>
+
+    <p>
+      <button id="pressTechButton">Turn Tech Button</button>
+    </p>
+  </div>
+
+  <script>
+    const socket = new WebSocket(`ws://${window.location.hostname}:3111`);
+
+    let mainDoorStatus = false;
+    let billDoorStatus = false;
+    let logicDoorStatus = false;
+    let collectButton = false;
+    let techButton = false;
+    let spinButton = false;
+
+    // Función para enviar el estado al servidor
+    function sendState() {
+      const status = {
+        mainDoorStatus,
+        billDoorStatus,
+        logicDoorStatus,
+        collectButton,
+        techButton,
+        spinButton
+      };
+      socket.send(JSON.stringify(status));
+      console.log('Estado enviado:', status);
+    }
+
+    socket.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      console.log (data);
+      document.getElementById('mainDoorStatus').innerText = data.mainDoorStatus ? "Closed" : "Open";
+      document.getElementById('billDoorStatus').innerText = data.billDoorStatus ? "Closed" : "Open";
+      document.getElementById('logicDoorStatus').innerText = data.logicDoorStatus ? "Closed" : "Open";
+      // Asegúrate de actualizar las variables locales
+      mainDoorStatus = data.mainDoorStatus;
+      billDoorStatus = data.billDoorStatus;
+      logicDoorStatus = data.logicDoorStatus;
+      collectButton = data.collectButton;
+      techButton = data.techButton;
+      spinButton = data.spinButton;
+      if (typeof (data.collectLamp) ==='boolean')
+        document.getElementById('collectLamp').style.backgroundColor = data.collectLamp ? "lightgreen" : "darkgreen";
+      if (typeof (data.spinLamp) ==='boolean')
+        document.getElementById('spinLamp').style.backgroundColor = data.spinLamp ? "lightgreen" : "darkgreen";
+    };
+
+    // Actualizar estado y enviar al servidor
+    document.getElementById('toggleMainDoorStatus').onclick = function() {
+      mainDoorStatus = !mainDoorStatus;
+      document.getElementById('mainDoorStatus').innerText = mainDoorStatus ? "Closed" : "Open";
+      sendState();
+    };
+
+    document.getElementById('toggleBillDoorStatus').onclick = function() {
+      billDoorStatus = !billDoorStatus;
+      document.getElementById('billDoorStatus').innerText = billDoorStatus ? "Closed" : "Open";
+      sendState();
+    };
+
+    document.getElementById('toggleLogicDoorStatus').onclick = function() {
+      logicDoorStatus = !logicDoorStatus;
+      document.getElementById('logicDoorStatus').innerText = logicDoorStatus ? "Closed" : "Open";
+      sendState();
+    };
+
+    // Funciones para manejar la presión y liberación de los botones
+    document.getElementById('pressCollectButton').onmousedown = function() {
+      collectButton = true;
+      sendState();
+    };
+    document.getElementById('pressCollectButton').onmouseup = function() {
+      collectButton = false;
+      sendState();
+    };
+
+    document.getElementById('pressTechButton').onmousedown = function() {
+      techButton = true;
+      sendState();
+    };
+    document.getElementById('pressTechButton').onmouseup = function() {
+      techButton = false;
+      sendState();
+    };
+
+    document.getElementById('pressSpinButton').onmousedown = function() {
+      spinButton = true;
+      sendState();
+    };
+    document.getElementById('pressSpinButton').onmouseup = function() {
+      spinButton = false;
+      sendState();
+    };
+  </script>
+</body>
+</html>

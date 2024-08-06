@@ -4,6 +4,7 @@ const pty = require('node-pty');
 const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
+const { chksum8 } = require('./services/utils');
 
 // Cargar configuración
 const config = JSON.parse(fs.readFileSync('config.json'));
@@ -123,19 +124,29 @@ function onData() {
 
 // Función para enviar el estado
 function sendStatus() {
+  const STX = 0x02
+  const ETX = 0x03
 
   // Enviar el buffer a través del socket o interfaz correspondiente
-  const statusBuffer = Buffer.from([
-    0x31, 0x30, 0x53,
+    let statusBuffer = Buffer.from([
+    STX,
+    0x00,
+    0x31,   // client to host
+    0x30,   // client to host
+    'S'.charCodeAt(0),   // 'S' char
     spinButton ? 0x31 : 0x30,
     techButton ? 0x31 : 0x30,
     logicDoorStatus ? 0x31 : 0x30,
     collectButton ? 0x31 : 0x30,
-    0x30,
+    0x30, //dummy
     billDoorStatus ? 0x31 : 0x30,
     mainDoorStatus ? 0x31 : 0x30,
-    0x31, 0x30 
+    0x30, //dummy
+    ETX, 
+    0x00  
   ]);
+  statusBuffer[1]= statusBuffer.length
+  statusBuffer[statusBuffer.length -1] = chksum8(statusBuffer);
   // Enviar el buffer a través del PTY
   if (wsBackplane)
     wsBackplane.send(statusBuffer);

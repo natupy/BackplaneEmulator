@@ -11,17 +11,10 @@
       border-radius: 50%;
       display: inline-block;
     }
-    .border-box {
-      border: 5px solid black; /* Grosor y color del borde */
-      padding: 10px; /* Espacio interno del recuadro */
-      margin: 10px; /* Espacio externo del recuadro */
-      width: fit-content; /* Ajustar el ancho al contenido */
-    }
   </style>
 </head>
 <body>
   <h1>Backplane Board</h1>
-  <div id="status" class="border-box">
   <div id="status">
     <p>
       <button id="toggleMainDoorStatus">Toggle Main Door</button>
@@ -52,7 +45,7 @@
       <button id="pressTechButton">Turn Tech Button</button>
     </p>
   </div>
-</div>
+
   <script>
     const socket = new WebSocket(`ws://${window.location.hostname}:3112`);
 
@@ -63,9 +56,6 @@
     let techButton = false;
     let spinButton = false;
 
-    function changeBorderColor(color) {
-      document.getElementById('status').style.borderColor = color;
-    }
     // Función para enviar el estado al servidor
     function sendState() {
       const status = {

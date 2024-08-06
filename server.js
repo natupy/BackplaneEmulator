@@ -117,6 +117,7 @@ function onData() {
       else if (lampCode == lampCollectCode)
         setCollectLamp(value)
     break;
+    
   }
 
   sendStatus();
@@ -145,7 +146,7 @@ function sendStatus() {
     ETX, 
     0x00  
   ]);
-  statusBuffer[1]= statusBuffer.length
+  statusBuffer[1]= statusBuffer.length + 0x30;
   statusBuffer[statusBuffer.length -1] = chksum8(statusBuffer);
   // Enviar el buffer a través del PTY
   if (wsBackplane)

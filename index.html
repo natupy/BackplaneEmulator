@@ -63,7 +63,8 @@
     let techButton = false;
     let spinButton = false;
 
-    function changeBorderColor(color) {
+    function changeBorderColor({ R, G, B }) {
+      const color = `rgb(${R}, ${G}, ${B})`;
       document.getElementById('status').style.borderColor = color;
     }
     // Función para enviar el estado al servidor
@@ -83,6 +84,10 @@
     socket.onmessage = function(event) {
       const data = JSON.parse(event.data);
       console.log (data);
+      if (typeof (data.setBorderColor) ==='boolean')
+      {
+        changeBorderColor({R: data.R, G: data.G,B: data.B})
+      }
       if (typeof (data.mainDoorStatus) ==='boolean'){
         document.getElementById('mainDoorStatus').innerText = data.mainDoorStatus ? "Closed" : "Open";
         mainDoorStatus = data.mainDoorStatus;

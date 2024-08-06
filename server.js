@@ -16,8 +16,8 @@ let logicDoorStatus = false;
 let collectButton = false;
 let techButton = false;
 let spinButton = false;
-let collectLamp = 'darkgreen';
-let spinLamp = 'darkgreen';
+let collectLampStatus = false;
+let spinLampStatus = false;
 
 let bufferRx = new Uint8Array(256);
 let cantRx = 0;
@@ -26,7 +26,7 @@ let wsBackplane;
 
 const lampSpinCode= '1'
 const lampCollectCode= '3'
-
+let timeoutVLTService;
 // Servidor web
 const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/') {
@@ -55,8 +55,9 @@ const wssHtml = new WebSocket.Server({ port: config.webSocketHTML });
 
 wssHtml.on('connection', (wsHtml) => {
   console.log('Cliente conectado');
-  // setCollectLamp(true);
-  // setSpinLamp(true);
+  setBoardColor({R:0,G:0,B:0})
+  setCollectLamp(collectLampStatus);
+  setSpinLamp(spinLampStatus);
 
   wsHtml.on('message', (message) => {
     // Parsear el mensaje recibido y actualizar el estado
@@ -112,15 +113,27 @@ function onData() {
     case 'L':
       const lampCode = String.fromCharCode(bufferRx[5]);
       const value = bufferRx[6] === 0x31
-      if (lampCode == lampSpinCode)
-        setSpinLamp(value)
-      else if (lampCode == lampCollectCode)
-        setCollectLamp(value)
-    break;
-    
-  }
 
+      if (lampCode == lampSpinCode){
+        spinLampStatus = value;
+        setSpinLamp(value)
+      }
+      else if (lampCode == lampCollectCode){
+        collectLampStatus = value;
+        setCollectLamp(value)
+      }
+    break;
+    case 'A':
+        //02 3D 30 31 41 38 30 30 30 30 30 03 FF 
+        const R =  (bufferRx[5] & 0x0F) *16 + (bufferRx[6] & 0x0F)
+        const G =  (bufferRx[7] & 0x0F) *16 + (bufferRx[8] & 0x0F)
+        const B =  (bufferRx[9] & 0x0F) *16 + (bufferRx[10] & 0x0F)
+        setBoardColor({R,G,B})
+    break;    
+  }
   sendStatus();
+  clearTimeout(timeoutVLTService)
+  timeoutVLTService = setTimeout(VLTServiceOut, 2000)
 }
 
 // Función para enviar el estado
@@ -156,7 +169,7 @@ function sendStatus() {
 
 // Función para ajustar el color de la lámpara de recolección (collect lamp)
 function setCollectLamp(status) {
-  console.log(`Collect Lamp set to: ${collectLamp}`);
+  console.log(`Collect Lamp set to: ${collectLampStatus}`);
 
   // Enviar el nuevo estado a través del WebSocket
   const message = JSON.stringify({
@@ -171,7 +184,7 @@ function setCollectLamp(status) {
 
 // Función para ajustar el color de la lámpara de giro (spin lamp)
 function setSpinLamp(status) {
-  console.log(`Spin Lamp set to: ${spinLamp}`);
+  console.log(`Spin Lamp set to: ${spinLampStatus}`);
 
   // Enviar el nuevo estado a través del WebSocket
   const message = JSON.stringify({
@@ -182,4 +195,25 @@ function setSpinLamp(status) {
       client.send(message);
     }
   });
+}
+
+function setBoardColor(params){
+  const message = JSON.stringify({
+    setBorderColor: true,
+    ...params
+  });
+  wssHtml.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+
+}
+
+function VLTServiceOut()
+{
+  setBoardColor({R:0,G:0,B:0})
+  setCollectLamp(false) 
+  setSpinLamp(false) 
+   
 }

@@ -18,7 +18,7 @@ let techButton = false;
 let spinButton = false;
 let collectLampStatus = false;
 let spinLampStatus = false;
-
+let boardColorStatus= {R:0,G:0,B:0}
 let bufferRx = new Uint8Array(256);
 let cantRx = 0;
 
@@ -55,7 +55,7 @@ const wssHtml = new WebSocket.Server({ port: config.webSocketHTML });
 
 wssHtml.on('connection', (wsHtml) => {
   console.log('Cliente conectado');
-  setBoardColor({R:0,G:0,B:0})
+  setBoardColor(boardColorStatus)
   setCollectLamp(collectLampStatus);
   setSpinLamp(spinLampStatus);
 
@@ -198,6 +198,8 @@ function setSpinLamp(status) {
 }
 
 function setBoardColor(params){
+  boardColorStatus = params
+  console.log ('borderColorSetTo: ',params)
   const message = JSON.stringify({
     setBorderColor: true,
     ...params

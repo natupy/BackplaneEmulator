@@ -1,6 +1,4 @@
-const { execSync } = require('child_process');
 const http = require('http');
-const pty = require('node-pty');
 const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
